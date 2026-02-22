@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinite Click Speed Test</title>
+    <title>Click Speed Arena: Pro Sidebar</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --primary: #6366f1; /* Indigo */
-            --accent: #06b6d4; /* Cyan */
+            --bg: #05070a;
+            --surface: #0f172a;
+            --primary: #6366f1;
+            --accent: #06b6d4;
             --text: #f8fafc;
-            --glow: 0 0 20px rgba(99, 102, 241, 0.5);
+            --panel-border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #05070a 100%);
             color: var(--text);
             margin: 0;
             display: flex;
@@ -25,292 +26,425 @@
             justify-content: center;
             min-height: 100vh;
             user-select: none;
+            overflow: hidden;
         }
 
-        /* --- HEADER & TOGGLES --- */
+        /* --- HEADER --- */
         .header {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 30px;
-            background: var(--surface);
-            padding: 8px;
-            border-radius: 50px;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(10px);
+            z-index: 20;
         }
 
         .mode-btn {
             background: transparent;
-            color: #94a3b8;
+            color: #64748b;
             border: none;
-            padding: 10px 25px;
-            border-radius: 40px;
+            padding: 12px 28px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 14px;
-            transition: 0.3s ease;
+            font-weight: 800;
+            font-size: 12px;
+            transition: all 0.2s ease;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
         .mode-btn.active {
             background: var(--primary);
             color: white;
-            box-shadow: var(--glow);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
         }
 
-        /* --- MAIN ARENA --- */
+        /* --- MAIN ARENA LAYOUT --- */
         .arena {
             display: flex;
-            gap: 25px;
+            gap: 40px; 
             align-items: stretch;
-            height: 400px;
+            height: 540px;
+            position: relative;
         }
 
-        /* --- CLICK ZONE --- */
+        /* --- SIDEBAR STATS (NEW) --- */
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            width: 180px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 900;
+            margin-top: 8px;
+            display: block;
+        }
+
+        .highlight-accent { color: var(--accent); text-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+        .highlight-white { color: white; }
+
+        /* --- CLICKER PAD --- */
         .click-zone {
-            width: 400px;
-            background: var(--surface);
-            border: 2px solid #334155;
-            border-radius: 24px;
+            width: 440px;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            border: 2px solid #1e293b;
+            border-radius: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: crosshair;
-            transition: all 0.1s;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0,0,0,0.6);
         }
 
-        .click-zone:active {
-            transform: scale(0.98);
+        .click-zone.active-flash {
             border-color: var(--accent);
-            box-shadow: inset 0 0 30px rgba(6, 182, 212, 0.2);
+            transform: scale(0.98);
         }
 
         .click-zone h2 {
-            font-size: 100px;
+            font-size: 150px;
             margin: 0;
             z-index: 2;
+            font-weight: 900;
             font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 30px rgba(255,255,255,0.1);
+            letter-spacing: -8px;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
         }
 
         .click-zone p {
-            color: #94a3b8;
-            font-size: 16px;
+            color: var(--accent);
+            font-size: 12px;
             z-index: 2;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: -10px;
+            letter-spacing: 6px;
+            margin-top: -20px;
+            font-weight: 800;
+            opacity: 0.8;
         }
 
-        /* Ripple Effect */
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(0);
-            animation: ripple-anim 0.4s linear;
-            pointer-events: none;
+        /* --- SPEEDOMETER --- */
+        .speed-container {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            width: 240px; /* Wider to accommodate floating badge */
         }
-        @keyframes ripple-anim { to { transform: scale(3); opacity: 0; } }
 
-        /* --- SPEEDOMETER BAR --- */
         .speedometer {
             width: 90px;
-            background: var(--surface);
-            border-radius: 24px;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 40px;
             position: relative;
             display: flex;
             flex-direction: column-reverse;
             overflow: hidden;
-            border: 2px solid #334155;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(10px);
         }
 
         .fill-bar {
             width: 100%;
-            height: 0%;
-            background: linear-gradient(to top, #3b82f6, #8b5cf6, #d946ef);
-            transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0.9;
-            box-shadow: 0 0 30px rgba(217, 70, 239, 0.6);
+            height: 0%; 
+            background: linear-gradient(to top, #4f46e5, #8b5cf6, #d946ef, #f43f5e);
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+            border-top: 4px solid rgba(255,255,255,0.6);
+        }
+
+        .animal-status {
+            position: absolute;
+            left: 110px;
+            bottom: 0%; 
+            white-space: nowrap;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: bottom 0.1s linear, background 0.3s;
+            z-index: 10;
+        }
+
+        .animal-status::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid var(--primary);
+            transition: border-right-color 0.3s;
         }
 
         .animal-marker {
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
             width: 100%;
             text-align: center;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.5);
-            font-size: 11px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.2);
+            font-size: 9px;
             padding-bottom: 4px;
-            font-weight: bold;
+            font-weight: 900;
             pointer-events: none;
+            z-index: 5;
         }
         
-        .m-snail { bottom: 10%; }   /* 1-2 CPS */
-        .m-turtle { bottom: 30%; }  /* 4-5 CPS */
-        .m-rabbit { bottom: 50%; }  /* 7-8 CPS */
-        .m-cheetah { bottom: 75%; } /* 11-12 CPS */
-        .m-falcon { bottom: 90%; }  /* 14+ CPS */
+        /* Markers */
+        .m-snail { bottom: 8%; }    
+        .m-turtle { bottom: 16%; }  
+        .m-human { bottom: 24%; } 
+        .m-dog { bottom: 32%; }     
+        .m-rabbit { bottom: 40%; }  
+        .m-kangaroo { bottom: 52%; } 
+        .m-cheetah { bottom: 66%; } 
+        .m-falcon { bottom: 78%; }  
+        .m-dragon { bottom: 96%; }  
 
-        /* --- STATS ONLY (No Button) --- */
-        .footer {
-            margin-top: 30px;
-            display: flex;
-            justify-content: center;
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(6, 182, 212, 0.3);
+            transform: scale(0);
+            animation: ripple-anim 0.4s ease-out;
+            pointer-events: none;
         }
+        @keyframes ripple-anim { to { transform: scale(5); opacity: 0; } }
 
-        .stats-row {
-            display: flex;
-            gap: 50px;
-            text-align: center;
-            background: rgba(255,255,255,0.03);
-            padding: 15px 40px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
+        /* --- UTILITY --- */
+        .reset-link {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-decoration: none;
         }
-
-        .stat-box h3 { margin: 0; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-box div { font-size: 20px; font-weight: 800; margin-top: 5px; color: white; }
-        .highlight { color: var(--accent) !important; text-shadow: 0 0 10px rgba(6, 182, 212, 0.6); }
+        .reset-link:hover { color: #94a3b8; }
 
     </style>
 </head>
 <body>
 
     <div class="header">
-        <button class="mode-btn active" id="btnLeft" onclick="setMode('left')">Left Click</button>
-        <button class="mode-btn" id="btnRight" onclick="setMode('right')">Right Click</button>
+        <button class="mode-btn active" id="btnLeft" onclick="setMode('left')">Primary Core</button>
+        <button class="mode-btn" id="btnRight" onclick="setMode('right')">Secondary Core</button>
     </div>
 
     <div class="arena">
+        <div class="sidebar-stats">
+            <div class="stat-card">
+                <h3>Your PR</h3>
+                <span class="value highlight-white" id="prDisplay">0 CPS</span>
+            </div>
+            <div class="stat-card">
+                <h3>World Record</h3>
+                <span class="value highlight-accent">105.1 CPS</span>
+            </div>
+        </div>
+
         <div class="click-zone" id="clickArea" onmousedown="handleClick(event)" oncontextmenu="return false;">
             <h2 id="cpsDisplay">0</h2>
-            <p>Clicks / Sec</p>
+            <p>CPS STRENGTH</p>
         </div>
 
-        <div class="speedometer">
-            <div class="fill-bar" id="speedBar"></div>
-            
-            <div class="animal-marker m-falcon">🦅 FALCON</div>
-            <div class="animal-marker m-cheetah">🐆 CHEETAH</div>
-            <div class="animal-marker m-rabbit">🐇 RABBIT</div>
-            <div class="animal-marker m-turtle">🐢 TURTLE</div>
-            <div class="animal-marker m-snail">🐌 SNAIL</div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="stats-row">
-            <div class="stat-box">
-                <h3>Session Best</h3>
-                <div id="pbDisplay">0 CPS</div>
+        <div class="speed-container">
+            <div class="speedometer">
+                <div class="fill-bar" id="speedBar"></div>
+                <div class="animal-marker m-dragon">Dragon</div>
+                <div class="animal-marker m-falcon">Falcon</div>
+                <div class="animal-marker m-cheetah">Cheetah</div>
+                <div class="animal-marker m-kangaroo">Kangaroo</div>
+                <div class="animal-marker m-rabbit">Rabbit</div>
+                <div class="animal-marker m-dog">Dog</div>
+                <div class="animal-marker m-human">Human</div>
+                <div class="animal-marker m-turtle">Turtle</div>
+                <div class="animal-marker m-snail">Snail</div>
             </div>
-            <div class="stat-box">
-                <h3>World Record</h3>
-                <div class="highlight">14.2 CPS</div>
+
+            <div class="animal-status" id="statusBadge">
+                <span id="statusEmoji">🐌</span>
+                <span id="statusName">SNAIL</span>
             </div>
         </div>
     </div>
+
+    <a class="reset-link" onclick="resetPR()">Reset Personal Record</a>
 
 <script>
-    // GAME STATE
     let mode = 'left'; 
-    let clickTimestamps = []; // Stores the time of every click in the last 1 second
-    let maxCPS = 0;
+    let clickTimestamps = []; 
+    
+    // Persistent Storage
+    let personalRecord = localStorage.getItem('click_arena_pr') || 0;
+    
+    let currentBarHeight = 0;
+    const smoothing = 0.15;
 
-    // DOM ELEMENTS
+    const animals = [
+        { name: "SNAIL", emoji: "🐌", min: 0, color: "#64748b" },
+        { name: "TURTLE", emoji: "🐢", min: 1, color: "#10b981" },
+        { name: "HUMAN", emoji: "🚶", min: 5, color: "#06b6d4" },
+        { name: "DOG", emoji: "🐕", min: 8, color: "#3b82f6" },
+        { name: "RABBIT", emoji: "🐇", min: 10, color: "#8b5cf6" },
+        { name: "KANGAROO", emoji: "🦘", min: 13, color: "#d946ef" },
+        { name: "CHEETAH", emoji: "🐆", min: 25, color: "#f97316" },
+        { name: "FALCON", emoji: "🦅", min: 55, color: "#ef4444" },
+        { name: "DRAGON", emoji: "🐉", min: 90, color: "#ff0000" }
+    ];
+
     const cpsDisplay = document.getElementById('cpsDisplay');
-    const pbDisplay = document.getElementById('pbDisplay');
+    const prDisplay = document.getElementById('prDisplay');
     const speedBar = document.getElementById('speedBar');
     const clickArea = document.getElementById('clickArea');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusEmoji = document.getElementById('statusEmoji');
+    const statusName = document.getElementById('statusName');
 
-    // START LOOP
+    prDisplay.innerText = `${personalRecord} CPS`;
+
     requestAnimationFrame(gameLoop);
 
     function setMode(newMode) {
         mode = newMode;
         document.getElementById('btnLeft').classList.toggle('active', mode === 'left');
         document.getElementById('btnRight').classList.toggle('active', mode === 'right');
-        resetGame(); // Auto-reset when changing modes
+        resetSession();
     }
 
     function handleClick(e) {
-        if (e.button === 2) e.preventDefault(); // Block Context Menu
-
+        if (e.button === 2) e.preventDefault(); 
         const requiredButton = (mode === 'left') ? 0 : 2;
         if (e.button !== requiredButton) return;
 
-        createRipple(e);
+        clickArea.classList.remove('active-flash');
+        void clickArea.offsetWidth;
+        clickArea.classList.add('active-flash');
 
-        // Add current time to array
-        const now = Date.now();
-        clickTimestamps.push(now);
+        createRipple(e);
+        clickTimestamps.push(Date.now());
     }
 
     function gameLoop() {
         const now = Date.now();
-
-        // Remove clicks older than 1 second (1000ms)
-        // This creates a "Moving Window" of 1 second
         while (clickTimestamps.length > 0 && clickTimestamps[0] <= now - 1000) {
             clickTimestamps.shift();
         }
 
-        const currentCPS = clickTimestamps.length;
+        const actualCPS = clickTimestamps.length;
+        cpsDisplay.innerText = actualCPS;
 
-        // Update Display
-        cpsDisplay.innerText = currentCPS;
-
-        // Update High Score
-        if (currentCPS > maxCPS) {
-            maxCPS = currentCPS;
-            pbDisplay.innerText = maxCPS + " CPS";
-            pbDisplay.classList.add('highlight');
+        if (actualCPS > personalRecord) {
+            personalRecord = actualCPS;
+            localStorage.setItem('click_arena_pr', personalRecord);
+            prDisplay.innerText = `${personalRecord} CPS`;
+            prDisplay.classList.add('highlight-accent');
         }
 
-        // Update Bar Height (Max scale 15 CPS)
-        let percentage = (currentCPS / 15) * 100;
-        if (percentage > 100) percentage = 100;
-        speedBar.style.height = `${percentage}%`;
+        // Smart Scaling
+        let targetPercent = 0;
+        if (actualCPS <= 15) {
+            targetPercent = (actualCPS / 15) * 60;
+        } else {
+            targetPercent = 60 + ((actualCPS - 15) / 95) * 40;
+        }
+        if (targetPercent > 100) targetPercent = 100;
 
-        // Loop forever
+        currentBarHeight += (targetPercent - currentBarHeight) * smoothing;
+        speedBar.style.height = `${currentBarHeight}%`;
+
+        statusBadge.style.bottom = `calc(${currentBarHeight}% - 22px)`;
+        
+        let currentAnimal = animals[0];
+        for (let i = animals.length - 1; i >= 0; i--) {
+            if (actualCPS >= animals[i].min) {
+                currentAnimal = animals[i];
+                break;
+            }
+        }
+
+        statusEmoji.innerText = currentAnimal.emoji;
+        statusName.innerText = currentAnimal.name;
+        statusBadge.style.background = currentAnimal.color;
+        document.documentElement.style.setProperty('--primary', currentAnimal.color);
+
         requestAnimationFrame(gameLoop);
     }
 
-    function resetGame() {
+    function resetSession() {
         clickTimestamps = [];
-        maxCPS = 0;
+        currentBarHeight = 0;
         cpsDisplay.innerText = "0";
-        pbDisplay.innerText = "0 CPS";
         speedBar.style.height = "0%";
-        pbDisplay.classList.remove('highlight');
     }
 
-    // Ripple Visual Effect
+    function resetPR() {
+        if(confirm("Are you sure you want to delete your Personal Record?")) {
+            personalRecord = 0;
+            localStorage.removeItem('click_arena_pr');
+            prDisplay.innerText = "0 CPS";
+            prDisplay.classList.remove('highlight-accent');
+        }
+    }
+
     function createRipple(event) {
         const circle = document.createElement("span");
-        const diameter = Math.max(clickArea.clientWidth, clickArea.clientHeight);
-        const radius = diameter / 2;
+        const diameter = 100;
         const rect = clickArea.getBoundingClientRect();
-
         circle.style.width = circle.style.height = `${diameter}px`;
-        circle.style.left = `${event.clientX - rect.left - radius}px`;
-        circle.style.top = `${event.clientY - rect.top - radius}px`;
+        circle.style.left = `${event.clientX - rect.left - (diameter/2)}px`;
+        circle.style.top = `${event.clientY - rect.top - (diameter/2)}px`;
         circle.classList.add("ripple");
-
-        const ripple = clickArea.getElementsByClassName("ripple")[0];
-        if (ripple) {
-            ripple.remove();
-        }
-
         clickArea.appendChild(circle);
+        setTimeout(() => circle.remove(), 400);
     }
 </script>
 
