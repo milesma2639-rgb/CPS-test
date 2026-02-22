@@ -1,1 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Speed Arena: Pro Sidebar</title>
+    <style>
+        :root {
+            --bg: #05070a;
+            --surface: #0f172a;
+            --primary: #6366f1;
+            --accent: #06b6d4;
+            --text: #f8fafc;
+            --panel-border: rgba(255, 255, 255, 0.1);
+        }
 
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #05070a 100%);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+        }
+
+        .mode-btn {
+            background: transparent;
+            color: #64748b;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* --- MAIN ARENA LAYOUT --- */
+        .arena {
+            display: flex;
+            gap: 40px; 
+            align-items: stretch;
+            height: 540px;
+            position: relative;
+        }
+
+        /* --- SIDEBAR STATS (NEW) --- */
+        .sidebar-stats {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            width: 180px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 900;
+            margin-top: 8px;
+            display: block;
+        }
+
+        .highlight-accent { color: var(--accent); text-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+        .highlight-white { color: white; }
+
+        /* --- CLICKER PAD --- */
+        .click-zone {
+            width: 440px;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            border: 2px solid #1e293b;
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: crosshair;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0,0,0,0.6);
+        }
+
+        .click-zone.active-flash {
+            border-color: var(--accent);
+            transform: scale(0.98);
+        }
+
+        .click-zone h2 {
+            font-size: 150px;
+            margin: 0;
+            z-index: 2;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -8px;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .click-zone p {
+            color: var(--accent);
+            font-size: 12px;
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            margin-top: -20px;
+            font-weight: 800;
+            opacity: 0.8;
+        }
+
+        /* --- SPEEDOMETER --- */
+        .speed-container {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            width: 240px; /* Wider to accommodate floating badge */
+        }
+
+        .speedometer {
+            width: 90px;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse;
+            overflow: hidden;
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .fill-bar {
+            width: 100%;
+            height: 0%; 
+            background: linear-gradient(to top, #4f46e5, #8b5cf6, #d946ef, #f43f5e);
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+            border-top: 4px solid rgba(255,255,255,0.6);
+        }
+
+        .animal-status {
+            position: absolute;
+            left: 110px;
+            bottom: 0%; 
+            white-space: nowrap;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: bottom 0.1s linear, background 0.3s;
+            z-index: 10;
+        }
+
+        .animal-status::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid var(--primary);
+            transition: border-right-color 0.3s;
+        }
+
+        .animal-marker {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.2);
+            font-size: 9px;
+            padding-bottom: 4px;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        /* Markers */
+        .m-snail { bottom: 8%; }    
+        .m-turtle { bottom: 16%; }  
+        .m-human { bottom: 24%; } 
+        .m-dog { bottom: 32%; }     
+        .m-rabbit { bottom: 40%; }  
+        .m-kangaroo { bottom: 52%; } 
+        .m-cheetah { bottom: 66%; } 
+        .m-falcon { bottom: 78%; }  
+        .m-dragon { bottom: 96%; }  
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(6, 182, 212, 0.3);
+            transform: scale(0);
+            animation: ripple-anim 0.4s ease-out;
+            pointer-events: none;
+        }
+        @keyframes ripple-anim { to { transform: scale(5); opacity: 0; } }
+
+        /* --- UTILITY --- */
+        .reset-link {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .reset-link:hover { color: #94a3b8; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="mode-btn active" id="btnLeft" onclick="setMode('left')">Primary Core</button>
+        <button class="mode-btn" id="btnRight" onclick="setMode('right')">Secondary Core</button>
+    </div>
+
+    <div class="arena">
+        <div class="sidebar-stats">
+            <div class="stat-card">
+                <h3>Your PR</h3>
+                <span class="value highlight-white" id="prDisplay">0 CPS</span>
+            </div>
+            <div class="stat-card">
+                <h3>World Record</h3>
+                <span class="value highlight-accent">105.1 CPS</span>
+            </div>
+        </div>
+
+        <div class="click-zone" id="clickArea" onmousedown="handleClick(event)" oncontextmenu="return false;">
+            <h2 id="cpsDisplay">0</h2>
+            <p>CPS STRENGTH</p>
+        </div>
+
+        <div class="speed-container">
+            <div class="speedometer">
+                <div class="fill-bar" id="speedBar"></div>
+                <div class="animal-marker m-dragon">Dragon</div>
+                <div class="animal-marker m-falcon">Falcon</div>
+                <div class="animal-marker m-cheetah">Cheetah</div>
+                <div class="animal-marker m-kangaroo">Kangaroo</div>
+                <div class="animal-marker m-rabbit">Rabbit</div>
+                <div class="animal-marker m-dog">Dog</div>
+                <div class="animal-marker m-human">Human</div>
+                <div class="animal-marker m-turtle">Turtle</div>
+                <div class="animal-marker m-snail">Snail</div>
+            </div>
+
+            <div class="animal-status" id="statusBadge">
+                <span id="statusEmoji">🐌</span>
+                <span id="statusName">SNAIL</span>
+            </div>
+        </div>
+    </div>
+
+    <a class="reset-link" onclick="resetPR()">Reset Personal Record</a>
+
+<script>
+    let mode = 'left'; 
+    let clickTimestamps = []; 
+    
+    // Persistent Storage
+    let personalRecord = localStorage.getItem('click_arena_pr') || 0;
+    
+    let currentBarHeight = 0;
+    const smoothing = 0.15;
+
+    const animals = [
+        { name: "SNAIL", emoji: "🐌", min: 0, color: "#64748b" },
+        { name: "TURTLE", emoji: "🐢", min: 1, color: "#10b981" },
+        { name: "HUMAN", emoji: "🚶", min: 5, color: "#06b6d4" },
+        { name: "DOG", emoji: "🐕", min: 8, color: "#3b82f6" },
+        { name: "RABBIT", emoji: "🐇", min: 10, color: "#8b5cf6" },
+        { name: "KANGAROO", emoji: "🦘", min: 13, color: "#d946ef" },
+        { name: "CHEETAH", emoji: "🐆", min: 25, color: "#f97316" },
+        { name: "FALCON", emoji: "🦅", min: 55, color: "#ef4444" },
+        { name: "DRAGON", emoji: "🐉", min: 90, color: "#ff0000" }
+    ];
+
+    const cpsDisplay = document.getElementById('cpsDisplay');
+    const prDisplay = document.getElementById('prDisplay');
+    const speedBar = document.getElementById('speedBar');
+    const clickArea = document.getElementById('clickArea');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusEmoji = document.getElementById('statusEmoji');
+    const statusName = document.getElementById('statusName');
+
+    prDisplay.innerText = `${personalRecord} CPS`;
+
+    requestAnimationFrame(gameLoop);
+
+    function setMode(newMode) {
+        mode = newMode;
+        document.getElementById('btnLeft').classList.toggle('active', mode === 'left');
+        document.getElementById('btnRight').classList.toggle('active', mode === 'right');
+        resetSession();
+    }
+
+    function handleClick(e) {
+        if (e.button === 2) e.preventDefault(); 
+        const requiredButton = (mode === 'left') ? 0 : 2;
+        if (e.button !== requiredButton) return;
+
+        clickArea.classList.remove('active-flash');
+        void clickArea.offsetWidth;
+        clickArea.classList.add('active-flash');
+
+        createRipple(e);
+        clickTimestamps.push(Date.now());
+    }
+
+    function gameLoop() {
+        const now = Date.now();
+        while (clickTimestamps.length > 0 && clickTimestamps[0] <= now - 1000) {
+            clickTimestamps.shift();
+        }
+
+        const actualCPS = clickTimestamps.length;
+        cpsDisplay.innerText = actualCPS;
+
+        if (actualCPS > personalRecord) {
+            personalRecord = actualCPS;
+            localStorage.setItem('click_arena_pr', personalRecord);
+            prDisplay.innerText = `${personalRecord} CPS`;
+            prDisplay.classList.add('highlight-accent');
+        }
+
+        // Smart Scaling
+        let targetPercent = 0;
+        if (actualCPS <= 15) {
+            targetPercent = (actualCPS / 15) * 60;
+        } else {
+            targetPercent = 60 + ((actualCPS - 15) / 95) * 40;
+        }
+        if (targetPercent > 100) targetPercent = 100;
+
+        currentBarHeight += (targetPercent - currentBarHeight) * smoothing;
+        speedBar.style.height = `${currentBarHeight}%`;
+
+        statusBadge.style.bottom = `calc(${currentBarHeight}% - 22px)`;
+        
+        let currentAnimal = animals[0];
+        for (let i = animals.length - 1; i >= 0; i--) {
+            if (actualCPS >= animals[i].min) {
+                currentAnimal = animals[i];
+                break;
+            }
+        }
+
+        statusEmoji.innerText = currentAnimal.emoji;
+        statusName.innerText = currentAnimal.name;
+        statusBadge.style.background = currentAnimal.color;
+        document.documentElement.style.setProperty('--primary', currentAnimal.color);
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function resetSession() {
+        clickTimestamps = [];
+        currentBarHeight = 0;
+        cpsDisplay.innerText = "0";
+        speedBar.style.height = "0%";
+    }
+
+    function resetPR() {
+        if(confirm("Are you sure you want to delete your Personal Record?")) {
+            personalRecord = 0;
+            localStorage.removeItem('click_arena_pr');
+            prDisplay.innerText = "0 CPS";
+            prDisplay.classList.remove('highlight-accent');
+        }
+    }
+
+    function createRipple(event) {
+        const circle = document.createElement("span");
+        const diameter = 100;
+        const rect = clickArea.getBoundingClientRect();
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - rect.left - (diameter/2)}px`;
+        circle.style.top = `${event.clientY - rect.top - (diameter/2)}px`;
+        circle.classList.add("ripple");
+        clickArea.appendChild(circle);
+        setTimeout(() => circle.remove(), 400);
+    }
+</script>
+
+</body>
+</html>
