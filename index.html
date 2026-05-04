@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a14 60%, #000 100%);
+    min-height: 100vh;
+    color: #e8e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    background: linear-gradient(180deg, #fff 0%, #a8a8c0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: #8a8aa0;
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+  }
+  .layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    width: 100%;
+    max-width: 1100px;
+    flex-wrap: wrap;
+  }
+  .meter-section {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    height: min(75vw, 460px);
+  }
+  .meter {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .meter-tiers {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    line-height: 1;
+  }
+  .meter-tier {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    opacity: 0.4;
+    transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+    filter: grayscale(0.6) brightness(0.85);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+  .meter-tier.active {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: grayscale(0) brightness(1.1);
+    border-color: rgba(96, 165, 250, 0.9);
+    box-shadow: 0 0 16px rgba(96, 165, 250, 0.6);
+  }
+  .meter-track {
+    width: 22px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .meter-fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 0%;
+    background: linear-gradient(0deg, #ef4444 0%, #f97316 20%, #fbbf24 40%, #84cc16 60%, #22d3ee 80%, #3b82f6 100%);
+    transition: height 0.12s ease-out;
+    box-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+  }
+  .divider {
+    width: 1px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.25) 15%, rgba(255,255,255,0.25) 85%, transparent 100%);
+  }
+  @media (max-width: 900px) {
+    .layout { justify-content: center; }
+    .meter-section { margin-right: 0; }
+  }
+  .durations {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    width: 160px;
+    flex-shrink: 0;
+  }
+  .duration-btn {
+    background: transparent;
+    border: none;
+    color: #a8a8c0;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .duration-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .duration-btn.active {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  }
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 160px;
+    flex-shrink: 0;
+  }
+  .stat {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 24px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 0.72rem;
+    color: #6a6a85;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-top: 4px;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+  .click-area {
+    width: min(75vw, 460px);
+    height: min(75vw, 460px);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
+    border: 3px solid rgba(96, 165, 250, 0.7);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.06s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.25), inset 0 0 60px rgba(59, 130, 246, 0.08);
+  }
+  .click-area:hover {
+    border-color: rgba(96, 165, 250, 0.9);
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.4), inset 0 0 60px rgba(59, 130, 246, 0.12);
+  }
+  @media (max-width: 720px) {
+    .layout { gap: 16px; }
+    .durations { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .stats { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .stat { min-width: 100px; padding: 10px 16px; }
+    .stat-value { font-size: 1.3rem; }
+  }
+  .click-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .click-area:hover::before { opacity: 1; }
+  .click-area:active { transform: scale(0.995); }
+  .click-area.running {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
+  }
+  .click-area.done { border-color: rgba(255,255,255,0.15); cursor: default; }
+  .click-area-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0 16px;
+    color: #fff;
+    letter-spacing: -0.01em;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 4px solid rgba(96, 165, 250, 0.95);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.55) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0) 80%);
+    box-shadow: 0 0 40px rgba(96, 165, 250, 0.6), inset 0 0 30px rgba(96, 165, 250, 0.3);
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 0.7s ease-out forwards;
+    z-index: 0;
+  }
+  @keyframes ripple {
+    0%   { transform: translate(-50%, -50%) scale(0);    opacity: 1;    border-width: 6px; }
+    50%  { opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(1.1);  opacity: 0;    border-width: 1px; }
+  }
+
+  /* Modal overlay */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+    animation: backdropIn 0.25s ease;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: linear-gradient(180deg, #1a1a2e 0%, #14141f 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 48px 40px 36px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+    animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .result-emoji {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+    border: 3px solid rgba(96, 165, 250, 0.6);
+    box-shadow: 0 0 40px rgba(96, 165, 250, 0.4), 0 10px 30px rgba(0,0,0,0.5);
+    animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+  }
+  .result-rank {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    animation: fadeUp 0.5s ease 0.25s both;
+  }
+  .result-stars {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .star {
+    font-size: 2rem;
+    color: #2a2a3e;
+    opacity: 0;
+    transform: scale(0.3);
+    animation: starPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    text-shadow: 0 0 0 transparent;
+    transition: text-shadow 0.3s ease;
+  }
+  .star.filled {
+    color: #fbbf24;
+    text-shadow: 0 0 16px rgba(251, 191, 36, 0.6);
+  }
+  .result-cps {
+    font-size: 1rem;
+    color: #8a8aa0;
+    margin-bottom: 28px;
+    animation: fadeUp 0.5s ease 0.65s both;
+  }
+  .result-cps strong { color: #e8e8f0; font-weight: 600; }
+  .try-again-btn {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    color: #fff;
+    padding: 12px 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.15s ease, opacity 0.3s ease;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+  }
+  .try-again-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .try-again-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.5);
+  }
+  .try-again-btn:active { transform: translateY(0); }
+  @keyframes starPop {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+
+  @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalIn {
+    0%   { transform: scale(0.85) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  @keyframes pop {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes fadeUp {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+  <h1>CPS</h1>
+  <p class="subtitle">Select a duration and start clicking.</p>
+
+  <div class="layout">
+    <div class="meter-section">
+      <div class="meter">
+        <div class="meter-tiers" id="meterTiers">
+          <img class="meter-tier" data-tier="5" src="images/cheetah.png" alt="Cheetah">
+          <img class="meter-tier" data-tier="4" src="images/tiger.png" alt="Tiger">
+          <img class="meter-tier" data-tier="3" src="images/buffalo.png" alt="Buffalo">
+          <img class="meter-tier" data-tier="2" src="images/turtle.png" alt="Turtle">
+          <img class="meter-tier" data-tier="1" src="images/snail.png" alt="Snail">
+          <img class="meter-tier" data-tier="0" src="images/sloth.png" alt="Sloth">
+        </div>
+        <div class="meter-track">
+          <div class="meter-fill" id="meterFill"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+    </div>
+
+    <div class="durations" id="durations"></div>
+
+    <div class="click-area" id="clickArea">
+      <div class="click-area-text" id="clickText">Click here to start</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" id="time">0.0s</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Clicks</div>
+        <div class="stat-value" id="clicks">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">CPS</div>
+        <div class="stat-value" id="cps">0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <img class="result-emoji" id="resultEmoji" alt="">
+
+      <div class="result-rank" id="resultRank"></div>
+      <div class="result-stars" id="resultStars"></div>
+      <div class="result-cps" id="resultCps"></div>
+      <button class="try-again-btn" id="tryAgainBtn">Try again</button>
+    </div>
+  </div>
+
+<script>
+  const DURATIONS = [
+    { label: '1s', seconds: 1 },
+    { label: '5s', seconds: 5 },
+    { label: '10s', seconds: 10 },
+    { label: '20s', seconds: 20 },
+    { label: '30s', seconds: 30 },
+    { label: '45s', seconds: 45 },
+    { label: '1m', seconds: 60 },
+  ];
+
+  const durationsEl = document.getElementById('durations');
+  const timeEl = document.getElementById('time');
+  const clicksEl = document.getElementById('clicks');
+  const cpsEl = document.getElementById('cps');
+  const clickArea = document.getElementById('clickArea');
+  const clickText = document.getElementById('clickText');
+  const modal = document.getElementById('modal');
+  const resultEmoji = document.getElementById('resultEmoji');
+  const resultRank = document.getElementById('resultRank');
+  const resultStars = document.getElementById('resultStars');
+  const resultCps = document.getElementById('resultCps');
+  const tryAgainBtn = document.getElementById('tryAgainBtn');
+  const meterFill = document.getElementById('meterFill');
+  const meterTiers = document.querySelectorAll('.meter-tier');
+
+  let selectedSeconds = 5;
+  let clicks = 0;
+  let startTime = null;
+  let running = false;
+  let finished = false;
+  let timerId = null;
+
+  function renderDurations() {
+    DURATIONS.forEach(d => {
+      const btn = document.createElement('button');
+      btn.className = 'duration-btn' + (d.seconds === selectedSeconds ? ' active' : '');
+      btn.textContent = d.label;
+      btn.addEventListener('click', () => {
+        if (running) return;
+        selectedSeconds = d.seconds;
+        document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        reset();
+      });
+      durationsEl.appendChild(btn);
+    });
+  }
+
+  function getRank(cps) {
+    if (cps >= 10) return { img: 'images/cheetah.png', name: 'Cheetah', stars: 5 };
+    if (cps >= 9)  return { img: 'images/tiger.png',   name: 'Tiger',   stars: 4 };
+    if (cps >= 8)  return { img: 'images/buffalo.png', name: 'Buffalo', stars: 4 };
+    if (cps >= 7)  return { img: 'images/turtle.png',  name: 'Turtle',  stars: 3 };
+    if (cps >= 6)  return { img: 'images/snail.png',   name: 'Snail',   stars: 2 };
+    return { img: 'images/sloth.png', name: 'Sloth', stars: 1 };
+  }
+
+  function renderStars(count) {
+    resultStars.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.textContent = '★';
+      star.style.animationDelay = (0.4 + i * 0.1) + 's';
+      resultStars.appendChild(star);
+      if (i < count) {
+        setTimeout(() => star.classList.add('filled'), 400 + i * 100 + 200);
+      }
+    }
+  }
+
+  function cpsToBarPercent(cps) {
+    if (cps <= 0) return 0;
+    if (cps >= 10) return 100;
+    if (cps >= 9) return 100 * (5/6 + (cps - 9) * (1/6));
+    if (cps >= 8) return 100 * (4/6 + (cps - 8) * (1/6));
+    if (cps >= 7) return 100 * (3/6 + (cps - 7) * (1/6));
+    if (cps >= 6) return 100 * (2/6 + (cps - 6) * (1/6));
+    if (cps >= 5) return 100 * (1/6 + (cps - 5) * (1/6));
+    return 100 * (cps / 5) * (1/6);
+  }
+
+  function cpsToTierIndex(cps) {
+    if (cps >= 10) return 5;
+    if (cps >= 9)  return 4;
+    if (cps >= 8)  return 3;
+    if (cps >= 7)  return 2;
+    if (cps >= 6)  return 1;
+    return 0;
+  }
+
+  function updateMeter(cps) {
+    meterFill.style.height = cpsToBarPercent(cps) + '%';
+    const activeTier = cps > 0 ? cpsToTierIndex(cps) : -1;
+    meterTiers.forEach(el => {
+      const tier = parseInt(el.dataset.tier, 10);
+      el.classList.toggle('active', tier === activeTier);
+    });
+  }
+
+  function updateDisplay() {
+    const now = performance.now();
+    const elapsedMs = startTime ? now - startTime : 0;
+    const remainingMs = Math.max(0, selectedSeconds * 1000 - elapsedMs);
+    timeEl.textContent = (remainingMs / 1000).toFixed(1) + 's';
+    clicksEl.textContent = clicks;
+    const elapsedSec = elapsedMs / 1000;
+    const cps = elapsedSec > 0 ? clicks / elapsedSec : 0;
+    cpsEl.textContent = cps.toFixed(2);
+    updateMeter(cps);
+  }
+
+  function startTest() {
+    running = true;
+    finished = false;
+    clicks = 1;
+    startTime = performance.now();
+    clickArea.classList.add('running');
+    clickArea.classList.remove('done');
+    clickText.textContent = 'Click!';
+    timerId = setInterval(() => {
+      updateDisplay();
+      if (performance.now() - startTime >= selectedSeconds * 1000) endTest();
+    }, 50);
+    updateDisplay();
+  }
+
+  function endTest() {
+    running = false;
+    finished = true;
+    clearInterval(timerId);
+    timerId = null;
+    const elapsedSec = (performance.now() - startTime) / 1000;
+    const cps = clicks / elapsedSec;
+    timeEl.textContent = '0.0s';
+    cpsEl.textContent = cps.toFixed(2);
+    clicksEl.textContent = clicks;
+    clickArea.classList.remove('running');
+    clickArea.classList.add('done');
+    clickText.textContent = 'Test complete';
+    showModal(cps, clicks, elapsedSec);
+  }
+
+  function showModal(cps, totalClicks, elapsed) {
+    const rank = getRank(cps);
+    resultEmoji.src = rank.img;
+    resultEmoji.alt = rank.name;
+    resultRank.textContent = rank.name;
+    resultCps.innerHTML = `<strong>${totalClicks}</strong> clicks · <strong>${elapsed.toFixed(2)}s</strong> · <strong>${cps.toFixed(2)}</strong> CPS`;
+    renderStars(rank.stars);
+    tryAgainBtn.classList.remove('visible');
+    modal.classList.add('show');
+    setTimeout(() => tryAgainBtn.classList.add('visible'), 1400);
+  }
+
+  function reset() {
+    running = false;
+    finished = false;
+    clicks = 0;
+    startTime = null;
+    clearInterval(timerId);
+    timerId = null;
+    timeEl.textContent = selectedSeconds.toFixed(1) + 's';
+    clicksEl.textContent = '0';
+    cpsEl.textContent = '0.00';
+    clickArea.classList.remove('running', 'done');
+    clickText.textContent = 'Click here to start';
+    modal.classList.remove('show');
+    updateMeter(0);
+  }
+
+  function spawnRipple(x, y) {
+    const rect = clickArea.getBoundingClientRect();
+    const size = 260 + Math.random() * 80;
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.left = (x - rect.left) + 'px';
+    ripple.style.top = (y - rect.top) + 'px';
+    ripple.style.width = size + 'px';
+    ripple.style.height = size + 'px';
+    clickArea.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+  }
+
+  function handlePress(x, y) {
+    if (finished) return;
+    spawnRipple(x, y);
+    if (!running) { startTest(); return; }
+    clicks++;
+    clicksEl.textContent = clicks;
+  }
+
+  clickArea.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handlePress(e.clientX, e.clientY);
+  });
+
+  clickArea.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    handlePress(touch.clientX, touch.clientY);
+  }, { passive: false });
+
+  tryAgainBtn.addEventListener('click', reset);
+
+  renderDurations();
+  reset();
+</script>
+</body>
+</html>
