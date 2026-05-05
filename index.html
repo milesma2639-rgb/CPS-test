@@ -192,8 +192,22 @@
     overflow: hidden;
     flex-shrink: 0;
     box-shadow: 0 0 40px rgba(59, 130, 246, 0.25), inset 0 0 60px rgba(59, 130, 246, 0.08);
-    outline: 2px dashed rgba(96, 165, 250, 0.45);
-    outline-offset: 18px;
+  }
+  .pad-wrap {
+    position: relative;
+    width: min(75vw, 380px);
+    height: min(75vw, 380px);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dashed-ring {
+    position: absolute;
+    inset: -26px;
+    width: calc(100% + 52px);
+    height: calc(100% + 52px);
+    pointer-events: none;
   }
   .click-area:hover {
     border-color: rgba(96, 165, 250, 0.9);
@@ -273,15 +287,39 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
     animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
+  .result-img-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 24px;
+  }
   .result-emoji {
-    width: 180px;
-    height: 180px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    margin-bottom: 20px;
-    border: 3px solid rgba(96, 165, 250, 0.6);
-    box-shadow: 0 0 40px rgba(96, 165, 250, 0.4), 0 10px 30px rgba(0,0,0,0.5);
-    animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: block;
+    animation: emojiReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s both;
+  }
+  .result-ring {
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    border: 4px solid rgba(96, 165, 250, 1);
+    box-shadow: 0 0 50px rgba(96, 165, 250, 0.7), inset 0 0 30px rgba(96, 165, 250, 0.35);
+    pointer-events: none;
+    animation: ringClose 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+  }
+  @keyframes ringClose {
+    0%   { transform: scale(5);   opacity: 0;  border-width: 18px; }
+    50%  { opacity: 1; }
+    100% { transform: scale(1);   opacity: 1;  border-width: 4px; }
+  }
+  @keyframes emojiReveal {
+    0%   { transform: scale(0);    opacity: 0; }
+    60%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1);    opacity: 1; }
   }
   .result-rank {
     font-size: 2.5rem;
@@ -289,32 +327,58 @@
     color: #fff;
     letter-spacing: -0.02em;
     margin-bottom: 8px;
-    animation: fadeUp 0.5s ease 0.25s both;
+    animation: fadeUp 0.5s ease 0.95s both;
   }
   .result-stars {
     display: flex;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 18px;
+    perspective: 600px;
   }
   .star {
-    font-size: 2rem;
-    color: #2a2a3e;
+    display: inline-block;
+    font-size: 2.5rem;
+    color: rgba(255,255,255,0.12);
     opacity: 0;
-    transform: scale(0.3);
-    animation: starPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    text-shadow: 0 0 0 transparent;
-    transition: text-shadow 0.3s ease;
+    transform: scale(0);
+    animation: starPopEmpty 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
   .star.filled {
     color: #fbbf24;
-    text-shadow: 0 0 16px rgba(251, 191, 36, 0.6);
+    animation: starBurst 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes starPopEmpty {
+    0%   { transform: scale(0);   opacity: 0; }
+    60%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  @keyframes starBurst {
+    0%   {
+      transform: scale(0) rotate(-360deg);
+      opacity: 0;
+      filter: drop-shadow(0 0 0 transparent) brightness(1);
+    }
+    45%  {
+      transform: scale(2) rotate(20deg);
+      opacity: 1;
+      filter: drop-shadow(0 0 30px rgba(255, 220, 100, 1)) brightness(2);
+    }
+    70%  {
+      transform: scale(0.85) rotate(-8deg);
+      filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.9)) brightness(1.4);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+      filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.7)) brightness(1);
+    }
   }
   .result-cps {
     font-size: 1rem;
     color: #8a8aa0;
     margin-bottom: 28px;
-    animation: fadeUp 0.5s ease 0.65s both;
+    animation: fadeUp 0.5s ease 2.1s both;
   }
   .result-cps strong { color: #e8e8f0; font-weight: 600; }
   .try-again-btn {
@@ -391,8 +455,13 @@
     <div class="durations" id="durations"></div>
     </div>
 
-    <div class="click-area" id="clickArea">
-      <div class="click-area-text" id="clickText">Click here to start</div>
+    <div class="pad-wrap">
+      <svg class="dashed-ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="49" fill="none" stroke="rgba(96, 165, 250, 0.55)" stroke-width="0.5" stroke-dasharray="4 2" stroke-linecap="round"/>
+      </svg>
+      <div class="click-area" id="clickArea">
+        <div class="click-area-text" id="clickText">Click here to start</div>
+      </div>
     </div>
 
     <div class="layout-right">
@@ -415,7 +484,10 @@
 
   <div class="modal-backdrop" id="modal">
     <div class="modal">
-      <img class="result-emoji" id="resultEmoji" alt="">
+      <div class="result-img-wrap">
+        <div class="result-ring"></div>
+        <img class="result-emoji" id="resultEmoji" alt="">
+      </div>
 
       <div class="result-rank" id="resultRank"></div>
       <div class="result-stars" id="resultStars"></div>
@@ -449,6 +521,13 @@
   const tryAgainBtn = document.getElementById('tryAgainBtn');
   const meterFill = document.getElementById('meterFill');
   const meterTiers = document.querySelectorAll('.meter-tier');
+  const dashedRing = document.querySelector('.dashed-ring');
+
+  const ringAnim = dashedRing.animate(
+    [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+    { duration: 30000, iterations: Infinity }
+  );
+  ringAnim.playbackRate = 1;
 
   let selectedSeconds = 5;
   let clicks = 0;
@@ -487,11 +566,13 @@
       const star = document.createElement('span');
       star.className = 'star';
       star.textContent = '★';
-      star.style.animationDelay = (0.4 + i * 0.1) + 's';
-      resultStars.appendChild(star);
       if (i < count) {
-        setTimeout(() => star.classList.add('filled'), 400 + i * 100 + 200);
+        star.classList.add('filled');
+        star.style.animationDelay = (1.05 + i * 0.18) + 's';
+      } else {
+        star.style.animationDelay = (1.05 + i * 0.18) + 's';
       }
+      resultStars.appendChild(star);
     }
   }
 
@@ -522,6 +603,7 @@
       const tier = parseInt(el.dataset.tier, 10);
       el.classList.toggle('active', tier === activeTier);
     });
+    ringAnim.playbackRate = Math.min(20, 1 + cps * 1.5);
   }
 
   function updateDisplay() {
@@ -576,7 +658,7 @@
     renderStars(rank.stars);
     tryAgainBtn.classList.remove('visible');
     modal.classList.add('show');
-    setTimeout(() => tryAgainBtn.classList.add('visible'), 1400);
+    setTimeout(() => tryAgainBtn.classList.add('visible'), 2700);
   }
 
   function reset() {
