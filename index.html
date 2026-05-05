@@ -32,13 +32,30 @@
     margin-bottom: 32px;
   }
   .layout {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 1200px;
+  }
+  .layout-left {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 36px;
-    width: 100%;
-    max-width: 1100px;
-    flex-wrap: wrap;
+    gap: 28px;
+    justify-self: start;
+  }
+  .layout-right {
+    display: flex;
+    justify-self: end;
+  }
+  @media (max-width: 900px) {
+    .layout {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .layout-left, .layout-right { justify-self: center; }
   }
   .meter-section {
     display: flex;
@@ -131,34 +148,35 @@
   .stats {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 160px;
+    gap: 14px;
+    width: 240px;
     flex-shrink: 0;
   }
   .stat {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 14px 24px;
-    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 22px 28px;
+    border-radius: 16px;
     text-align: center;
   }
   .stat-label {
-    font-size: 0.72rem;
-    color: #6a6a85;
+    font-size: 0.85rem;
+    color: #8a8aa0;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     font-weight: 600;
   }
   .stat-value {
-    font-size: 1.6rem;
+    font-size: 2.6rem;
     font-weight: 700;
-    margin-top: 4px;
+    margin-top: 6px;
     color: #fff;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
   .click-area {
-    width: min(75vw, 460px);
-    height: min(75vw, 460px);
+    width: min(75vw, 380px);
+    height: min(75vw, 380px);
     background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
     border: 3px solid rgba(96, 165, 250, 0.7);
     border-radius: 50%;
@@ -174,6 +192,8 @@
     overflow: hidden;
     flex-shrink: 0;
     box-shadow: 0 0 40px rgba(59, 130, 246, 0.25), inset 0 0 60px rgba(59, 130, 246, 0.08);
+    outline: 2px dashed rgba(96, 165, 250, 0.45);
+    outline-offset: 18px;
   }
   .click-area:hover {
     border-color: rgba(96, 165, 250, 0.9);
@@ -195,7 +215,6 @@
     transition: opacity 0.3s ease;
   }
   .click-area:hover::before { opacity: 1; }
-  .click-area:active { transform: scale(0.995); }
   .click-area.running {
     border-color: rgba(59, 130, 246, 0.5);
     background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
@@ -215,18 +234,17 @@
   .ripple {
     position: absolute;
     border-radius: 50%;
-    border: 4px solid rgba(96, 165, 250, 0.95);
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.55) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0) 80%);
-    box-shadow: 0 0 40px rgba(96, 165, 250, 0.6), inset 0 0 30px rgba(96, 165, 250, 0.3);
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.9) 0%, rgba(59, 130, 246, 0.8) 70%, rgba(59, 130, 246, 0.55) 100%);
+    border: 3px solid rgba(191, 219, 254, 1);
+    box-shadow: 0 0 30px rgba(96, 165, 250, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.25);
     pointer-events: none;
     transform: translate(-50%, -50%) scale(0);
-    animation: ripple 0.7s ease-out forwards;
+    animation: ripple 0.35s ease-out forwards;
     z-index: 0;
   }
   @keyframes ripple {
-    0%   { transform: translate(-50%, -50%) scale(0);    opacity: 1;    border-width: 6px; }
-    50%  { opacity: 0.9; }
-    100% { transform: translate(-50%, -50%) scale(1.1);  opacity: 0;    border-width: 1px; }
+    0%   { transform: translate(-50%, -50%) scale(0);   opacity: 0.95; }
+    100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
   }
 
   /* Modal overlay */
@@ -352,6 +370,7 @@
   <p class="subtitle">Select a duration and start clicking.</p>
 
   <div class="layout">
+    <div class="layout-left">
     <div class="meter-section">
       <div class="meter">
         <div class="meter-tiers" id="meterTiers">
@@ -370,23 +389,26 @@
     </div>
 
     <div class="durations" id="durations"></div>
+    </div>
 
     <div class="click-area" id="clickArea">
       <div class="click-area-text" id="clickText">Click here to start</div>
     </div>
 
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-label">Time</div>
-        <div class="stat-value" id="time">0.0s</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Clicks</div>
-        <div class="stat-value" id="clicks">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">CPS</div>
-        <div class="stat-value" id="cps">0.00</div>
+    <div class="layout-right">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Time</div>
+          <div class="stat-value" id="time">0.0s</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Clicks</div>
+          <div class="stat-value" id="clicks">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">CPS</div>
+          <div class="stat-value" id="cps">0.00</div>
+        </div>
       </div>
     </div>
   </div>
@@ -441,7 +463,6 @@
       btn.className = 'duration-btn' + (d.seconds === selectedSeconds ? ' active' : '');
       btn.textContent = d.label;
       btn.addEventListener('click', () => {
-        if (running) return;
         selectedSeconds = d.seconds;
         document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -584,7 +605,7 @@
     ripple.style.width = size + 'px';
     ripple.style.height = size + 'px';
     clickArea.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 750);
+    setTimeout(() => ripple.remove(), 380);
   }
 
   function handlePress(x, y) {
